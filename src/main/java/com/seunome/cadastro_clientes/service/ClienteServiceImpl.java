@@ -3,8 +3,10 @@ package com.seunome.cadastro_clientes.service;
 import com.seunome.cadastro_clientes.dto.ClienteRequestDTO;
 import com.seunome.cadastro_clientes.dto.ClienteResponseDTO;
 import com.seunome.cadastro_clientes.entity.Cliente;
+import com.seunome.cadastro_clientes.exception.ClienteNotFoundException;
+import com.seunome.cadastro_clientes.exception.CpfJaCadastradoException;
+import com.seunome.cadastro_clientes.exception.EmailJaCadastradoException;
 import com.seunome.cadastro_clientes.repository.ClienteRepository;
-import com.seunome.cadastro_clientes.service.ClienteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -20,10 +22,10 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public ClienteResponseDTO criar(ClienteRequestDTO dto) {
         if (repository.existsByCpf(dto.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new CpfJaCadastradoException(dto.getCpf());
         }
         if (repository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email já cadastrado");
+            throw new EmailJaCadastradoException(dto.getEmail());
         }
         Cliente cliente = converterParaEntidade(dto);
         Cliente salvo = repository.save(cliente);
@@ -33,7 +35,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public ClienteResponseDTO buscarPorId(Long id) {
         Cliente cliente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ClienteNotFoundException(id));
         return converterParaDTO(cliente);
     }
 
@@ -52,7 +54,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public ClienteResponseDTO atualizar(Long id, ClienteRequestDTO dto) {
         Cliente cliente = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ClienteNotFoundException(id));
         atualizarDados(cliente, dto);
         Cliente atualizado = repository.save(cliente);
         return converterParaDTO(atualizado);
@@ -62,22 +64,22 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public void deletar(Long id) {
         if (!repository.existsById(id)) {
-            throw new RuntimeException("Cliente não encontrado");
+            throw new ClienteNotFoundException(id);
         }
         repository.deleteById(id);
     }
 
     private Cliente converterParaEntidade(ClienteRequestDTO dto) {
         Cliente cliente = new Cliente();
-        cliente.setNome(dto.getNome());
-        cliente.setCpf(dto.getCpf());
-        cliente.setEmail(dto.getEmail());
-        cliente.setTelefone(dto.getTelefone());
-        cliente.setDataNascimento(dto.getDataNascimento());
-        cliente.setEndereco(dto.getEndereco());
-        cliente.setCidade(dto.getCidade());
-        cliente.setEstado(dto.getEstado());
-        cliente.setCep(dto.getCep());
+        cliente.setNome(dto.nome());
+        cliente.setCpf(dto.cpf());
+        cliente.setEmail(dto.email());
+        cliente.setTelefone(dto.telefone());
+        cliente.setDataNascimento(dto.dataNascimento());
+        cliente.setEndereco(dto.endereco());
+        cliente.setCidade(dto.cidade());
+        cliente.setEstado(dto.estado());
+        cliente.setCep(dto.cep());
         return cliente;
     }
 
@@ -98,13 +100,13 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private void atualizarDados(Cliente cliente, ClienteRequestDTO dto) {
-        cliente.setNome(dto.getNome());
-        cliente.setEmail(dto.getEmail());
-        cliente.setTelefone(dto.getTelefone());
-        cliente.setDataNascimento(dto.getDataNascimento());
-        cliente.setEndereco(dto.getEndereco());
-        cliente.setCidade(dto.getCidade());
-        cliente.setEstado(dto.getEstado());
-        cliente.setCep(dto.getCep());
+        cliente.setNome(dto.nome());
+        cliente.setEmail(dto.email());
+        cliente.setTelefone(dto.telefone());
+        cliente.setDataNascimento(dto.dataNascimento());
+        cliente.setEndereco(dto.endereco());
+        cliente.setCidade(dto.cidade());
+        cliente.setEstado(dto.estado());
+        cliente.setCep(dto.cep());
     }
 }
